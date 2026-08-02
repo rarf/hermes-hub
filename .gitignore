@@ -1,0 +1,11 @@
+# Editor / OS noise
+.DS_Store
+*.swp
+*~
+
+# Don't accidentally track installed plugin copies inside the hub
+plugins/*
+!plugins.json
+
+# Runtime artifacts
+*.log

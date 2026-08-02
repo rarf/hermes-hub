@@ -1,0 +1,17 @@
+{
+  "_comment": "Machine-readable index of Hermes plugins maintained by rarf. install.sh reads this. Each plugin keeps its OWN repo (per-plugin history/PRs) — the hub only clones/updates them into HERMES_HOME/plugins/<path>. Do NOT use git submodules here; that would fold plugin history into the hub and break the standalone-repo guarantee.",
+  "hermes_home_env": "HERMES_HOME",
+  "hermes_home_default": "~/AppData/Local/hermes",
+  "plugins": [
+    {
+      "id": "quota",
+      "repo": "https://github.com/rarf/hermes-quota-plugin.git",
+      "branch": "master",
+      "path": "quota",
+      "description": "Per-provider LLM quota / rate-limit footer block + /quota slash & CLI command.",
+      "core_deps": ["footer", "usage_extra"],
+      "core_prs": ["rarf/footer-hook", "rarf/usage-extra-hook"],
+      "enabled_by_default": true
+    }
+  ]
+}
