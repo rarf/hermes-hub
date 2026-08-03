@@ -1,8 +1,32 @@
 {
-  "_comment": "Machine-readable index of Hermes plugins maintained by rarf. install.sh reads this. Each plugin keeps its OWN repo (per-plugin history/PRs) — the hub only clones/updates them into HERMES_HOME/plugins/<path>. Do NOT use git submodules here; that would fold plugin history into the hub and break the standalone-repo guarantee.",
+  "_comment": "Machine-readable index of Hermes plugins maintained by rarf. install.sh reads this. Each plugin keeps its OWN repo (per-plugin history/PRs) — the hub only clones/updates them into HERMES_HOME/plugins/<path>. Do NOT use git submodules here; that would fold plugin history into the hub and break the standalone-repo guarantee. New fields vs the original: 'depends_on' (install-order prereqs, topologically sorted by install.sh), 'lifecycle' (stable|active|experimental — install.sh skips experimental unless --all), 'tracked_by_prs' (links to prs.json unmerged-PR entries).",
   "hermes_home_env": "HERMES_HOME",
   "hermes_home_default": "~/AppData/Local/hermes",
   "plugins": [
+    {
+      "id": "optmem",
+      "repo": "https://github.com/rarf/optmem-hermes-plugin.git",
+      "branch": "main",
+      "path": "optmem",
+      "description": "Local permanent memory provider (append-only LOG + decay-compressed TREE, accent-normalized BM25 recall). Zero deps, native Windows.",
+      "core_deps": [],
+      "depends_on": [],
+      "lifecycle": "stable",
+      "enabled_by_default": true,
+      "tracked_by_prs": []
+    },
+    {
+      "id": "lifeos",
+      "repo": "https://github.com/rarf/lifeos-hermes-plugin.git",
+      "branch": "main",
+      "path": "lifeos",
+      "description": "Personal operating system plugin: domains, objectives, KRs, projects, tasks, events + Dashboard UI. Private user-space layer (Option A), not a Hermes core fork.",
+      "core_deps": ["dashboard", "pre_llm_call"],
+      "depends_on": ["optmem"],
+      "lifecycle": "active",
+      "enabled_by_default": true,
+      "tracked_by_prs": []
+    },
     {
       "id": "quota",
       "repo": "https://github.com/rarf/hermes-quota-plugin.git",
@@ -11,7 +35,10 @@
       "description": "Per-provider LLM quota / rate-limit footer block + /quota slash & CLI command.",
       "core_deps": ["footer", "usage_extra"],
       "core_prs": ["rarf/footer-hook", "rarf/usage-extra-hook"],
-      "enabled_by_default": true
+      "depends_on": [],
+      "lifecycle": "stable",
+      "enabled_by_default": true,
+      "tracked_by_prs": ["rarf/footer-hook", "rarf/usage-extra-hook"]
     }
   ]
 }

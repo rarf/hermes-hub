@@ -1,0 +1,21 @@
+{
+  "_comment": "Tracker for unmerged PRs that this hub's setup depends on or cares about. Each entry: id (owner/repo#n or owner/branch), title, repo, state (open|merged|closed|superseded), depends (plugin ids it backs), reaply (short re-apply note after hermes update if dropped). CI lint verifies: valid JSON, every plugins.json tracked_by_prs[].id exists here, and 'state' is one of the allowed values.",
+  "prs": [
+    {
+      "id": "rarf/footer-hook",
+      "title": "Add footer hook (LLM response footer injection)",
+      "repo": "NousResearch/hermes-agent",
+      "state": "open",
+      "backs": ["quota"],
+      "reapply": "Pull PR diff and apply to local core before enabling quota footer: gh pr diff <n> | git -C <core> apply"
+    },
+    {
+      "id": "rarf/usage-extra-hook",
+      "title": "Add usage_extra hook (per-provider usage stats injection)",
+      "repo": "NousResearch/hermes-agent",
+      "state": "open",
+      "backs": ["quota"],
+      "reapply": "Pull PR diff and apply to local core before enabling quota usage_extra: gh pr diff <n> | git -C <core> apply"
+    }
+  ]
+}

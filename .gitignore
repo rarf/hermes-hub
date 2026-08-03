@@ -5,7 +5,12 @@
 
 # Don't accidentally track installed plugin copies inside the hub
 plugins/*
-!plugins.json
 
 # Runtime artifacts
 *.log
+doctor-*.txt
+
+# Local vaults / personal data (never commit)
+vault/
+*.state.json
+LOG.txt

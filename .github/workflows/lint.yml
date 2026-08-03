@@ -1,0 +1,24 @@
+name: hub-lint
+
+on:
+  push:
+    paths: ["plugins.json", "prs.json", "scripts/**", "install.sh", "sync.sh"]
+  pull_request:
+    paths: ["plugins.json", "prs.json", "scripts/**", "install.sh", "sync.sh"]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate JSON + cross-references
+        run: python scripts/lint.py
+      - name: Bash syntax check
+        run: |
+          for f in install.sh sync.sh scripts/setup.sh scripts/doctor.sh; do
+            bash -n "$f" || exit 1
+          done
