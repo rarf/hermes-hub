@@ -12,6 +12,24 @@
       "core_deps": ["footer", "usage_extra"],
       "core_prs": ["rarf/footer-hook", "rarf/usage-extra-hook"],
       "enabled_by_default": true
+    },
+    {
+      "id": "optmem",
+      "repo": "https://github.com/rarf/optmem-hermes-plugin.git",
+      "branch": "master",
+      "path": "optmem",
+      "description": "OptMem — permanent append-only memory provider with decay compression + BM25 search, wired as a Hermes MemoryProvider. Windows-native.",
+      "core_deps": ["on_memory_write"],
+      "enabled_by_default": false
+    },
+    {
+      "id": "lifeos",
+      "repo": "https://github.com/rarf/lifeos-hermes-plugin.git",
+      "branch": "main",
+      "path": "lifeos",
+      "description": "LifeOS — personal operating system plugin for Hermes: domains, objectives, KRs, tasks, projects, sessions, vault, adapters + Dashboard tab.",
+      "core_deps": ["pre_llm_call"],
+      "enabled_by_default": true
     }
   ]
 }

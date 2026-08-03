@@ -47,6 +47,8 @@ bash sync.sh
 | Plugin | Repo | Core hooks required | Status |
 |--------|------|---------------------|--------|
 | **quota** | [rarf/hermes-quota-plugin](https://github.com/rarf/hermes-quota-plugin) | `footer`, `usage_extra` (PRs: `rarf/footer-hook`, `rarf/usage-extra-hook`) | ✅ active |
+| **optmem** | [rarf/optmem-hermes-plugin](https://github.com/rarf/optmem-hermes-plugin) | `on_memory_write` (Hermes `MemoryProvider`) | ⚙️ optional (memory provider) |
+| **lifeos** | [rarf/lifeos-hermes-plugin](https://github.com/rarf/lifeos-hermes-plugin) | `pre_llm_call` | ✅ active |
 
 ## Adding a plugin
 
