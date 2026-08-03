@@ -2,9 +2,9 @@ name: hub-lint
 
 on:
   push:
-    paths: ["plugins.json", "prs.json", "scripts/**", "install.sh", "sync.sh"]
+    paths: ["plugins.json", "prs.json", "patches.json", "scripts/**", "install.sh", "sync.sh"]
   pull_request:
-    paths: ["plugins.json", "prs.json", "scripts/**", "install.sh", "sync.sh"]
+    paths: ["plugins.json", "prs.json", "patches.json", "scripts/**", "install.sh", "sync.sh"]
 
 jobs:
   lint:
@@ -19,6 +19,6 @@ jobs:
         run: python scripts/lint.py
       - name: Bash syntax check
         run: |
-          for f in install.sh sync.sh scripts/setup.sh scripts/doctor.sh; do
+          for f in install.sh sync.sh scripts/setup.sh scripts/doctor.sh scripts/patch.sh; do
             bash -n "$f" || exit 1
           done

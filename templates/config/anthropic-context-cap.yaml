@@ -1,0 +1,17 @@
+# Drop into ~/.hermes/config.yaml under `custom_providers:`
+# Caps Claude context at 200k (OAuth 1M carries a 5x token multiplier above
+# 200k — a cost trap for long sessions that burn quota).
+#
+# CRITICAL: do NOT add api_key / key_env. Without them Hermes inherits native
+# Anthropic credentials and the billing bypass stays active. Adding them routes
+# to the custom provider and BREAKS OAuth.
+custom_providers:
+  - name: anthropic-context-cap
+    base_url: https://api.anthropic.com
+    models:
+      claude-sonnet-5: {context_length: 200000}
+      claude-sonnet-4-6: {context_length: 200000}
+      claude-opus-4-8: {context_length: 200000}
+      claude-haiku-4-5: {context_length: 200000}
+      claude-fable-3: {context_length: 200000}
+      # add other Claude slugs from `claude --models`

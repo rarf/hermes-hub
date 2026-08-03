@@ -1,0 +1,19 @@
+{
+  "_comment": "Out-of-tree layers that modify the Hermes runtime but are NOT Hermes plugins (so they are not in plugins.json / not installed via 'hermes plugins enable'). Each entry: id, title, repo, branch, install (how to install), survives_update_via (mechanism), doctor_check (what doctor.sh verifies), related_config (template path), tracked_by_prs. CI lint validates this file too.",
+  "patches": [
+    {
+      "id": "claude-auth-bypass",
+      "title": "Claude Code OAuth billing bypass",
+      "repo": "https://github.com/rarf/hermes-claude-auth.git",
+      "branch": "main",
+      "install": "clone rarf/hermes-claude-auth && ./install.sh (installs patches/anthropic_billing_bypass.py + venv sitecustomize.py loader)",
+      "survives_update_via": [
+        "durable canonical loader at ~/AppData/Local/hermes/patches/sitecustomize.py",
+        "git hooks via core.hooksPath outside repo (post-merge/post-checkout restore venv sitecustomize.py)"
+      ],
+      "doctor_check": "patches/sitecustomize.py exists AND venv/Lib/site-packages/sitecustomize.py present AND hermes startup logs '[anthropic_billing_bypass] Bypass installed'",
+      "related_config": "templates/config/anthropic-context-cap.yaml",
+      "tracked_by_prs": []
+    }
+  ]
+}

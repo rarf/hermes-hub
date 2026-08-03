@@ -14,11 +14,15 @@ it survives `hermes update`. The hub **documents and orchestrates**:
 3. **Syncs** them via [`sync.sh`](sync.sh) (fast-forward pull to latest).
 4. **Tracks unmerged PRs** in [`prs.json`](prs.json) — the core hook PRs your
    setup depends on, so `hermes update` doesn't silently drop them.
-5. **Documents the whole setup** in [`docs/`](docs/) — onboarding, profiles,
-   vault, use cases, experiments, and the safe-update procedure.
-6. **Ships templates + scripts** ([`templates/`](templates/),
-   [`scripts/`](scripts/)) — non-destructive `setup.sh` and a `doctor.sh`
-   health check, linted in CI.
+5. **Tracks out-of-tree patches** in [`patches.json`](patches.json) — runtime
+   layers that modify Hermes but aren't plugins (e.g. the Claude Code OAuth
+   billing bypass). Orchestrated by [`scripts/patch.sh`](scripts/patch.sh).
+6. **Documents the whole setup** in [`docs/`](docs/) — onboarding, profiles,
+   vault, use cases, experiments, the Claude bypass, particularities (non-obvious
+   environment facts), and the safe-update procedure.
+7. **Ships templates + scripts** ([`templates/`](templates/),
+   [`scripts/`](scripts/)) — non-destructive `setup.sh`, a `doctor.sh` health
+   check, `patch.sh`, and `lint.py`, all linted in CI.
 
 ## Why a meta-repo (not a monorepo)
 
@@ -34,11 +38,13 @@ if the hub is deleted. This matches the standalone-repo guarantee that
 hermes-hub/
 ├── plugins.json        # machine-readable index (read by install.sh / sync.sh / CI)
 ├── prs.json            # unmerged-PR tracker (core hooks the setup depends on)
+├── patches.json        # out-of-tree runtime patches (e.g. Claude OAuth bypass)
 ├── install.sh          # clone + enable all listed plugins (topo order, lifecycle-aware)
 ├── sync.sh             # fast-forward pull all installed plugins
-├── docs/               # onboarding, profiles, vault, usecases, experiments, updating
-├── templates/          # neutral profile + vault starter configs
-├── scripts/            # setup.sh (scaffold), doctor.sh (verify), lint.py (CI)
+├── docs/               # onboarding, profiles, vault, usecases, experiments,
+│                       #   claude-auth, particularities, updating
+├── templates/          # neutral profile + vault + config starter configs
+├── scripts/            # setup.sh (scaffold), doctor.sh (verify), patch.sh, lint.py (CI)
 └── README.md
 ```
 
@@ -72,7 +78,9 @@ bash scripts/doctor.sh # verify
 - [docs/vault.md](docs/vault.md) — Obsidian + LifeOS vault.
 - [docs/usecases.md](docs/usecases.md) — domains → plugins/skills (what's productive).
 - [docs/experiments.md](docs/experiments.md) — experimental vs promoted.
-- [docs/updating.md](docs/updating.md) — `hermes update` + **keeping unmerged PRs alive**.
+- [docs/claude-auth.md](docs/claude-auth.md) — Claude Code OAuth billing bypass + survive-`hermes update`.
+- [docs/particularities.md](docs/particularities.md) — non-obvious environment facts (routing, GW, x_search, LifeOS SoT).
+- [docs/updating.md](docs/updating.md) — `hermes update` + **keeping unmerged PRs + patches alive**.
 
 ## Adding a plugin
 

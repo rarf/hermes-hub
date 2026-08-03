@@ -14,6 +14,7 @@ import json, sys, os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLUGINS = os.path.join(ROOT, "plugins.json")
 PRS = os.path.join(ROOT, "prs.json")
+PATCHES = os.path.join(ROOT, "patches.json")
 ALLOWED_LIFECYCLE = {"stable", "active", "experimental"}
 ALLOWED_STATE = {"open", "merged", "closed", "superseded"}
 
@@ -69,5 +70,13 @@ for p in prs.get("prs", []):
     for b in p.get("backs", []):
         if b not in by_id:
             fail(f"PR {p['id']} backs unknown plugin '{b}'")
+
+# patches.json — out-of-tree runtime layers (separate from plugins)
+if os.path.exists(PATCHES):
+    patches = json.load(open(PATCHES))
+    for p in patches.get("patches", []):
+        if not all(k in p for k in ("id", "repo", "install")):
+            fail(f"patch missing id/repo/install: {p}")
+    ok("patches.json valid")
 
 ok("plugins.json + prs.json valid and cross-references resolve")
