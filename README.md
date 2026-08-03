@@ -49,6 +49,7 @@ bash sync.sh
 | **quota** | [rarf/hermes-quota-plugin](https://github.com/rarf/hermes-quota-plugin) | `footer`, `usage_extra` (PRs: `rarf/footer-hook`, `rarf/usage-extra-hook`) | ✅ active |
 | **optmem** | [rarf/optmem-hermes-plugin](https://github.com/rarf/optmem-hermes-plugin) | `on_memory_write` (Hermes `MemoryProvider`) | ⚙️ optional (memory provider) |
 | **lifeos** | [rarf/lifeos-hermes-plugin](https://github.com/rarf/lifeos-hermes-plugin) | `pre_llm_call` | ✅ active |
+  - Getting started + onboarding wizard: [lifeos/GETTING_STARTED.md](https://github.com/rarf/lifeos-hermes-plugin/blob/main/GETTING_STARTED.md)
 
 ## Adding a plugin
 
