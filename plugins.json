@@ -16,7 +16,7 @@
     {
       "id": "optmem",
       "repo": "https://github.com/rarf/optmem-hermes-plugin.git",
-      "branch": "master",
+      "branch": "main",
       "path": "optmem",
       "description": "OptMem — permanent append-only memory provider with decay compression + BM25 search, wired as a Hermes MemoryProvider. Windows-native.",
       "core_deps": ["on_memory_write"],
