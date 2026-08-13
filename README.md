@@ -81,6 +81,7 @@ bash scripts/doctor.sh # verify
 - [docs/claude-auth.md](docs/claude-auth.md) — Claude Code OAuth billing bypass + survive-`hermes update`.
 - [docs/particularities.md](docs/particularities.md) — non-obvious environment facts (routing, GW, x_search, LifeOS SoT).
 - [docs/updating.md](docs/updating.md) — `hermes update` + **keeping unmerged PRs + patches alive**.
+- [docs/roadmap.md](docs/roadmap.md) — **plugin/feature roadmap + live upstream PR status.**
 
 ## Adding a plugin
 
