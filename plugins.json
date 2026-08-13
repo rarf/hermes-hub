@@ -33,12 +33,12 @@
       "branch": "master",
       "path": "quota",
       "description": "Per-provider LLM quota / rate-limit footer block + /quota slash & CLI command.",
-      "core_deps": ["footer", "usage_extra"],
-      "core_prs": ["rarf/footer-hook", "rarf/usage-extra-hook"],
+      "core_deps": ["transform_footer", "transform_usage_extra"],
+      "core_prs": ["NousResearch/hermes-agent#85060", "NousResearch/hermes-agent#85061"],
       "depends_on": [],
       "lifecycle": "stable",
       "enabled_by_default": true,
-      "tracked_by_prs": ["rarf/footer-hook", "rarf/usage-extra-hook"]
+      "tracked_by_prs": ["NousResearch/hermes-agent#85060", "NousResearch/hermes-agent#85061"]
     }
   ]
 }

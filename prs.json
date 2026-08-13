@@ -1,21 +1,136 @@
 {
-  "_comment": "Tracker for unmerged PRs that this hub's setup depends on or cares about. Each entry: id (owner/repo#n or owner/branch), title, repo, state (open|merged|closed|superseded), depends (plugin ids it backs), reaply (short re-apply note after hermes update if dropped). CI lint verifies: valid JSON, every plugins.json tracked_by_prs[].id exists here, and 'state' is one of the allowed values.",
+  "_comment": "Tracker for upstream PRs this setup depends on or cares about. Each entry: id (owner/repo#number), title, repo, branch, url, state (open|merged|closed|superseded), merge_state (from `gh pr view --json mergeStateStatus`), last_checked (UTC date), backs (plugin ids in plugins.json this PR enables; empty for quality-of-life PRs), notes, reapply (actionable snippet to restore the diff locally after `hermes update` drops it). CI lint verifies: valid JSON, every plugins.json tracked_by_prs[].id exists here, allowed state, and backs referencing real plugin ids. Refresh with: bash scripts/prs-refresh.sh",
+  "last_checked": "2026-08-13",
   "prs": [
     {
-      "id": "rarf/footer-hook",
-      "title": "Add footer hook (LLM response footer injection)",
+      "id": "NousResearch/hermes-agent#85060",
+      "title": "feat(plugins): add transform_footer lifecycle hook",
       "repo": "NousResearch/hermes-agent",
+      "branch": "feat/transform-footer-hook",
+      "url": "https://github.com/NousResearch/hermes-agent/pull/85060",
       "state": "open",
+      "merge_state": "BLOCKED",
+      "last_checked": "2026-08-13",
       "backs": ["quota"],
-      "reapply": "Pull PR diff and apply to local core before enabling quota footer: gh pr diff <n> | git -C <core> apply"
+      "notes": "Observer-side render-transform hook: a plugin appends a block to the runtime footer on the final agent response (agent loop, gateway, desktop). Split out of the closed #79397 per the #64231 hook-taxonomy (verb-led ids). MERGEABLE, no conflicts; BLOCKED only on maintainer review. Required for the quota plugin's footer block.",
+      "reapply": "gh pr diff 85060 -R NousResearch/hermes-agent | git -C \"$HERMES_CORE\" apply --3way"
     },
     {
-      "id": "rarf/usage-extra-hook",
-      "title": "Add usage_extra hook (per-provider usage stats injection)",
+      "id": "NousResearch/hermes-agent#85061",
+      "title": "feat(plugins): add transform_usage_extra lifecycle hook",
       "repo": "NousResearch/hermes-agent",
+      "branch": "feat/transform-usage-extra-hook",
+      "url": "https://github.com/NousResearch/hermes-agent/pull/85061",
       "state": "open",
+      "merge_state": "BLOCKED",
+      "last_checked": "2026-08-13",
       "backs": ["quota"],
-      "reapply": "Pull PR diff and apply to local core before enabling quota usage_extra: gh pr diff <n> | git -C <core> apply"
+      "notes": "Observer-side render-transform hook: a plugin appends a section to the end of the /usage command render. Split out of the closed #79397 per the #64231 hook-taxonomy. MERGEABLE, no conflicts; BLOCKED only on maintainer review. Required for the quota plugin's /usage section.",
+      "reapply": "gh pr diff 85061 -R NousResearch/hermes-agent | git -C \"$HERMES_CORE\" apply --3way"
+    },
+    {
+      "id": "NousResearch/hermes-agent#79397",
+      "title": "feat(plugins): add generic footer + usage_extra lifecycle hooks",
+      "repo": "NousResearch/hermes-agent",
+      "branch": "feat/footer-usage-extra-hooks",
+      "url": "https://github.com/NousResearch/hermes-agent/pull/79397",
+      "state": "superseded",
+      "merge_state": "CLOSED",
+      "last_checked": "2026-08-13",
+      "backs": [],
+      "notes": "Closed 2026-08-13, superseded by #85060 + #85061 after splitting the two hooks into independent verb-led PRs per the #64231 taxonomy. Kept for provenance; do NOT re-apply this diff — use the split PRs instead.",
+      "reapply": "n/a — superseded by #85060 and #85061."
+    },
+    {
+      "id": "NousResearch/hermes-agent#69441",
+      "title": "feat(gateway): interactive /profile picker (parity with /model)",
+      "repo": "NousResearch/hermes-agent",
+      "branch": "feat/gateway-profile-picker",
+      "url": "https://github.com/NousResearch/hermes-agent/pull/69441",
+      "state": "open",
+      "merge_state": "DIRTY",
+      "last_checked": "2026-08-13",
+      "backs": [],
+      "notes": "7 commits, 4 review rounds; sweeper review points addressed. CONFLICTING — needs a rebase onto upstream main. Quality-of-life for the multi-profile setup (default/casa/alldrivers), not a hard plugin dependency.",
+      "reapply": "gh pr diff 69441 -R NousResearch/hermes-agent | git -C \"$HERMES_CORE\" apply --3way"
+    },
+    {
+      "id": "NousResearch/hermes-agent#83318",
+      "title": "fix(desktop): silence Windows 'restricted characters' git warning",
+      "repo": "NousResearch/hermes-agent",
+      "branch": "fix/desktop-git-custom-binary-warning",
+      "url": "https://github.com/NousResearch/hermes-agent/pull/83318",
+      "state": "open",
+      "merge_state": "BLOCKED",
+      "last_checked": "2026-08-13",
+      "backs": [],
+      "notes": "Mergeable, awaiting maintainer review. Supersedes the closed #83259. Windows-only papercut fix for this host.",
+      "reapply": "gh pr diff 83318 -R NousResearch/hermes-agent | git -C \"$HERMES_CORE\" apply --3way"
+    },
+    {
+      "id": "kristianvast/hermes-claude-auth#28",
+      "title": "fix(loader): resolve patches across Hermes profiles + Windows",
+      "repo": "kristianvast/hermes-claude-auth",
+      "branch": "fix/loader-profiles-windows",
+      "url": "https://github.com/kristianvast/hermes-claude-auth/pull/28",
+      "state": "open",
+      "merge_state": "CLEAN",
+      "last_checked": "2026-08-13",
+      "backs": [],
+      "notes": "Backs the claude-auth-bypass entry in patches.json (an out-of-tree runtime layer, not a plugin). 6 commits, MERGEABLE and clean; waiting on the maintainer. The local install already runs this branch.",
+      "reapply": "git -C \"$HOME/projects/hermes-claude-auth\" fetch origin pull/28/head:pr28 && git -C \"$HOME/projects/hermes-claude-auth\" checkout pr28 && ./install.sh"
+    },
+    {
+      "id": "expo/expo#46449",
+      "title": "fix(task-manager)[android]: guard against null headless app loader",
+      "repo": "expo/expo",
+      "branch": "fix/task-manager-null-headless-loader",
+      "url": "https://github.com/expo/expo/pull/46449",
+      "state": "open",
+      "merge_state": "DIRTY",
+      "last_checked": "2026-08-13",
+      "backs": [],
+      "notes": "Unrelated to Hermes — AllDrivers mobile dependency. CONFLICTING and REVIEW_REQUIRED since June; another production user confirmed the bug and patches locally. Needs a rebase or a periodic upstream ping.",
+      "reapply": "n/a — consumed via patch-package in the AllDrivers mobile app, not via Hermes."
+    },
+    {
+      "id": "VictorTaelin/OptMem#2",
+      "title": "fix: native Windows support (msvcrt lock instead of fcntl)",
+      "repo": "VictorTaelin/OptMem",
+      "branch": "fix/windows-msvcrt-lock",
+      "url": "https://github.com/VictorTaelin/OptMem/pull/2",
+      "state": "merged",
+      "merge_state": "MERGED",
+      "last_checked": "2026-08-13",
+      "backs": ["optmem"],
+      "notes": "Merged upstream. Provenance: the optmem plugin's Windows file locking depends on this having landed.",
+      "reapply": "n/a — merged upstream."
+    },
+    {
+      "id": "NousResearch/hermes-agent#6844",
+      "title": "fix: preserve config_context_length when switching models",
+      "repo": "NousResearch/hermes-agent",
+      "branch": "fix/preserve-config-context-length",
+      "url": "https://github.com/NousResearch/hermes-agent/pull/6844",
+      "state": "superseded",
+      "merge_state": "CLOSED",
+      "last_checked": "2026-08-13",
+      "backs": [],
+      "notes": "Closed but cherry-picked upstream — the fix is in core. Credibility reference; no local re-apply needed.",
+      "reapply": "n/a — cherry-picked into core."
+    },
+    {
+      "id": "NousResearch/hermes-agent#56966",
+      "title": "fix: limit desktop model pickers to explicit providers",
+      "repo": "NousResearch/hermes-agent",
+      "branch": "fix/desktop-model-picker-providers",
+      "url": "https://github.com/NousResearch/hermes-agent/pull/56966",
+      "state": "superseded",
+      "merge_state": "CLOSED",
+      "last_checked": "2026-08-13",
+      "backs": [],
+      "notes": "Closed but cherry-picked upstream — the fix is in core. Credibility reference; no local re-apply needed.",
+      "reapply": "n/a — cherry-picked into core."
     }
   ]
 }
