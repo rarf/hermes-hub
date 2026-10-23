@@ -8,12 +8,22 @@
       "repo": "https://github.com/rarf/optmem-hermes-plugin.git",
       "branch": "main",
       "path": "optmem",
+      "runtime_name": "optmem-hermes",
       "description": "Local permanent memory provider (append-only LOG + decay-compressed TREE, accent-normalized BM25 recall). Zero deps, native Windows.",
       "core_deps": [],
       "depends_on": [],
       "lifecycle": "stable",
       "enabled_by_default": true,
-      "tracked_by_prs": []
+      "tracked_by_prs": [],
+      "local_installation": {
+        "profile": "default",
+        "hermes_home": "/home/rarf/.hermes",
+        "version": "0.3.0-unreleased",
+        "sha": "1cae50030eb9651063d9f97ed2a0b3892e189811",
+        "mode": "optmem-only",
+        "pr": "https://github.com/rarf/optmem-hermes-plugin/pull/1",
+        "note": "Verified directory install. Remote main is unchanged; do not replace this pin via the legacy main-branch hub installer before merge/release approval."
+      }
     },
     {
       "id": "lifeos",
@@ -33,12 +43,12 @@
       "branch": "master",
       "path": "quota",
       "description": "Per-provider LLM quota / rate-limit footer block + /quota slash & CLI command.",
-      "core_deps": ["footer", "usage_extra"],
-      "core_prs": ["rarf/footer-hook", "rarf/usage-extra-hook"],
+      "core_deps": ["transform_footer", "transform_usage_extra"],
+      "core_prs": ["NousResearch/hermes-agent#85060", "NousResearch/hermes-agent#85061"],
       "depends_on": [],
       "lifecycle": "stable",
       "enabled_by_default": true,
-      "tracked_by_prs": ["rarf/footer-hook", "rarf/usage-extra-hook"]
+      "tracked_by_prs": ["NousResearch/hermes-agent#85060", "NousResearch/hermes-agent#85061"]
     }
   ]
 }

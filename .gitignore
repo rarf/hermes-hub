@@ -14,3 +14,7 @@ doctor-*.txt
 vault/
 *.state.json
 LOG.txt
+
+# Private setup inventories, rollback copies and probe receipts
+_local/
+__pycache__/

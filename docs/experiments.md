@@ -10,7 +10,7 @@ stays clean. Experimental plugins are skipped by `install.sh` unless you pass
 |------------|------|--------|-------------------|
 | **OptMem as permanent memory** | Local append-only LOG + decay TREE replacing/backing cloud memory | `active` (default memory layer for LifeOS) | Low — pure stdlib, offline; falls back to cloud providers |
 | **LifeOS Dashboard localhost API** | Plugin starts `127.0.0.1:9128` HTTP API (core only auto-imports bundled `dashboard/plugin_api.py`) | `active` | Medium — if port busy, dashboard tab shows status, still renders |
-| **Core hook PRs (footer / usage_extra)** | `rarf/footer-hook`, `rarf/usage-extra-hook` — quota plugin depends on these unmerged hooks | `pending merge` | Medium — `hermes update` can clobber them; see [updating.md](updating.md) |
+| **Core hook PRs (transform_footer / transform_usage_extra)** | [#85060](https://github.com/NousResearch/hermes-agent/pull/85060) + [#85061](https://github.com/NousResearch/hermes-agent/pull/85061) — quota plugin depends on these unmerged hooks. Split out of the closed #79397 per the #64231 hook taxonomy; both MERGEABLE, awaiting review | `pending merge` | Medium — `hermes update` can clobber them; see [updating.md](updating.md) |
 | **Honcho as memory provider** | Self-hosted Honcho alternative to cloud memory | `experimental` | Isolated — opt-in |
 
 ## Promotion rule

@@ -1,78 +1,101 @@
 #!/usr/bin/env bash
-# doctor.sh — verify the hub's setup is healthy on this machine.
-# Checks: (1) plugins.json valid, (2) each plugin cloned+enabled, (3) LifeOS
-# API reachable, (4) every tracked_by_prs entry resolves in prs.json, (5) hooks
-# for core PRs present if the plugin is enabled.
-# Pass --snapshot to also dump a before-update report.
+# Read-only, profile-aware setup inspection. Never install or restart anything.
 set -uo pipefail
-
 HUB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PLUGINS_JSON="$HUB_DIR/plugins.json"
-PRS_JSON="$HUB_DIR/prs.json"
-SNAPSHOT=0
-[[ "${1:-}" == "--snapshot" ]] && SNAPSHOT=1
+exec python3 - "$HUB_DIR" "$@" <<'PY'
+import argparse
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import urllib.request
 
-if [[ -z "${HERMES_HOME:-}" ]]; then
-  HERMES_HOME="${XDG_DATA_HOME:-$HOME/AppData/Local}/hermes"
-fi
-export HERMES_HOME
-PLUGINS_DIR="$HERMES_HOME/plugins"
+hub = Path(sys.argv[1])
+parser = argparse.ArgumentParser(description="Read-only Hermes hub doctor")
+parser.add_argument("--snapshot", action="store_true")
+parser.add_argument("--profile", default=None)
+args = parser.parse_args(sys.argv[2:])
+home = Path(os.environ.get("HERMES_HOME") or Path.home() / ".hermes")
+if args.profile:
+    if not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_-]*", args.profile):
+        parser.error("invalid profile name")
+    root = home.parent.parent if home.parent.name == "profiles" else home
+    home = root if args.profile == "default" else root / "profiles" / args.profile
+print("Hermes hub — doctor")
+print(f"  HERMES_HOME = {home}")
+failed = False
 
-fail=0
-ok()   { echo "  [OK]   $1"; }
-warn() { echo "  [WARN] $1"; }
-bad()  { echo "  [FAIL] $1"; fail=1; }
+def report(status, message):
+    global failed
+    print(f"  [{status}] {message}")
+    failed |= status == "FAIL"
 
-echo "Hermes hub — doctor"
-
-# (1) JSON validity
-python -c "import json;json.load(open('$PLUGINS_JSON'))" 2>/dev/null && ok "plugins.json valid JSON" || bad "plugins.json invalid JSON"
-python -c "import json;json.load(open('$PRS_JSON'))" 2>/dev/null     && ok "prs.json valid JSON"     || bad "prs.json invalid JSON"
-
-# (2) plugins present + enabled
-for id in $(python -c "import json;[print(p['id']) for p in json.load(open('$PLUGINS_JSON'))['plugins']]"); do
-  path=$(python -c "import json;print([p.get('path',p['id']) for p in json.load(open('$PLUGINS_JSON'))['plugins'] if p['id']=='$id'][0])")
-  if [[ -d "$PLUGINS_DIR/$path/.git" ]]; then ok "plugin '$id' cloned at $PLUGINS_DIR/$path"; else warn "plugin '$id' not cloned (run install.sh)"; fi
-  if command -v hermes >/dev/null 2>&1; then
-    if hermes plugins list 2>/dev/null | grep -q "$id"; then ok "plugin '$id' listed"; else warn "plugin '$id' not enabled"; fi
-  fi
-done
-
-# (3) LifeOS API reachable (localhost, optional)
-if command -v curl >/dev/null 2>&1; then
-  if curl -s -o /dev/null -w "%{http_code}" --max-time 2 http://127.0.0.1:9128/health 2>/dev/null | grep -q 200; then
-    ok "LifeOS API up on 127.0.0.1:9128"
-  else
-    warn "LifeOS API not reachable on 127.0.0.1:9128 (start Hermes / enable lifeos)"
-  fi
-fi
-
-# (4) tracked_by_prs resolve in prs.json
-python - "$PLUGINS_JSON" "$PRS_JSON" <<'PY'
-import json, sys
-plug = json.load(open(sys.argv[1]))
-prs  = json.load(open(sys.argv[2]))
+try:
+    plugins = json.loads((hub / "plugins.json").read_text(encoding="utf-8"))
+    prs = json.loads((hub / "prs.json").read_text(encoding="utf-8"))
+except (OSError, ValueError) as exc:
+    report("FAIL", f"invalid hub metadata: {type(exc).__name__}")
+    sys.exit(1)
+report("OK", "plugins.json + prs.json valid JSON")
 pr_ids = {p["id"] for p in prs.get("prs", [])}
-for p in plug["plugins"]:
-    for t in p.get("tracked_by_prs", []):
-        if t not in pr_ids:
-            print(f"  [FAIL] plugin '{p['id']}' tracks unknown PR '{t}'")
-            sys.exit(1)
-print("  [OK]   every tracked_by_prs entry resolves in prs.json")
+for plugin in plugins.get("plugins", []):
+    for reference in plugin.get("tracked_by_prs", []):
+        if reference not in pr_ids:
+            report("FAIL", f"plugin '{plugin['id']}' tracks unknown PR '{reference}'")
+if not failed:
+    report("OK", "every tracked_by_prs entry resolves in prs.json")
+
+# Refuse to bootstrap a bogus legacy home through the Hermes wrapper.
+enabled = set()
+if not (home / "config.yaml").is_file():
+    report("FAIL", "profile config.yaml missing; runtime probe not launched")
+elif not shutil.which("hermes"):
+    report("FAIL", "Hermes CLI unavailable; runtime state unverified")
+else:
+    env = os.environ.copy()
+    env["HERMES_HOME"] = str(home)
+    env["HERMES_PROFILE"] = home.name if home.parent.name == "profiles" else "default"
+    try:
+        result = subprocess.run(["hermes", "plugins", "list", "--plain", "--no-bundled"],
+                                env=env, capture_output=True, text=True, timeout=15)
+        if result.returncode:
+            report("FAIL", f"plugin discovery exit {result.returncode}; runtime unverified")
+        else:
+            for line in result.stdout.splitlines():
+                fields = line.split()
+                if fields and fields[0] == "enabled":
+                    enabled.add(fields[-1])
+    except (OSError, subprocess.TimeoutExpired):
+        report("FAIL", "plugin discovery unavailable or timed out; runtime unverified")
+
+known = {p.get("runtime_name", p.get("path", p["id"])) for p in plugins.get("plugins", [])}
+for name in sorted(known | enabled):
+    path = home / "plugins" / name
+    installed = path.is_dir() and any((path / marker).exists()
+                                    for marker in ("plugin.yaml", "hermes_plugin.py", ".git"))
+    if installed:
+        report("OK", f"plugin '{name}' installed at {path}")
+    elif name in enabled:
+        report("FAIL", f"enabled plugin '{name}' package missing")
+    else:
+        report("INFO", f"plugin '{name}' not installed in this profile (optional)")
+    report("OK" if name in enabled else "INFO",
+           f"plugin '{name}' {'enabled' if name in enabled else 'not enabled in this profile'}")
+
+if "lifeos" in enabled:
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:9128/health", timeout=2) as response:
+            report("OK" if response.status == 200 else "WARN", f"LifeOS health HTTP {response.status}")
+    except OSError:
+        report("WARN", "LifeOS enabled but localhost health unavailable")
+else:
+    report("INFO", "LifeOS not enabled; health probe not applicable")
+if args.snapshot:
+    for p in plugins.get("plugins", []):
+        print(f"  [SNAPSHOT] {p['id']}:{p.get('lifecycle', '-')} (registry, not live PR status)")
+print("doctor: issues found" if failed else "doctor: healthy (optional components excluded)")
+sys.exit(int(failed))
 PY
-
-# (5) core PRs still open (informational)
-python - "$PRS_JSON" <<'PY'
-import json, sys
-prs = json.load(open(sys.argv[1])).get("prs", [])
-for p in prs:
-    print(f"  [INFO] PR {p['id']} -> state={p['state']} backs={','.join(p.get('backs',[])) or '-'}")
-PY
-
-if [[ $SNAPSHOT -eq 1 ]]; then
-  echo "--- snapshot ---"
-  python -c "import json;d=json.load(open('$PLUGINS_JSON'));print('\n'.join(f\"{p['id']}:{p.get('lifecycle','-')}\" for p in d['plugins']))"
-fi
-
-echo
-if [[ $fail -eq 0 ]]; then echo "doctor: healthy (warnings above are non-fatal)."; else echo "doctor: issues found — see [FAIL] above."; exit 1; fi
