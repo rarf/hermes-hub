@@ -1,8 +1,9 @@
 # Roadmap — plugins, features and upstream work
 
 Living map of what exists, what's in flight, and what's next across the whole
-setup. Verified against live GitHub state on **2026-08-13**
-(`bash scripts/prs-refresh.sh` re-checks it).
+setup. Verified against live GitHub state on **2026-10-22** — every PR state
+below was re-read from the API, and `bash scripts/prs-refresh.sh` reports no
+drift for `prs.json` (re-run it to re-check).
 
 Three layers, tracked in three files:
 
@@ -20,33 +21,34 @@ Three layers, tracked in three files:
 |--------|------|-----------|------------|------------|
 | **optmem** | `rarf/optmem-hermes-plugin` | `stable` | — | — |
 | **lifeos** | `rarf/lifeos-hermes-plugin` | `active` | optmem | — |
-| **quota** | `rarf/hermes-quota-plugin` | `stable` | — | #85060, #85061 |
+| **quota** | `rarf/hermes-quota-plugin` | `stable` | — | #85060, #85061 (render hooks: not merged; the plugin works without them) |
 
-### ⚠ Index vs reality — audited 2026-08-13
+### ⚠ Index vs reality — audited 2026-10-22
 
-`hermes plugins list` and `$HERMES_HOME/plugins/` do **not** match what this
-index promises. Verified on this machine:
+`plugins.json` still describes the machine as it looked in August. Verified on
+this host today:
 
-| Plugin | On disk | Git clone? | `hermes plugins list` |
-|--------|---------|-----------|----------------------|
-| lifeos | full source | **no `.git`** | `enabled`, v0.5.2, source `user` |
-| optmem | full source | **no `.git`** | **`not enabled`**, v0.1.0, source `user` |
-| quota | full source | yes | `enabled`, v1.0.0, source `git` |
-| hermes-achievements | only `state.json`, `scan_*.json` | no | **absent** |
+| Plugin | On disk | Git clone? | Effective version | Reality |
+|--------|---------|-----------|-------------------|---------|
+| quota | full source | yes | **2.11.0** (`plugin.yaml`), **clone HEAD `ce8593a` = 2.10.0** | Files were updated to 2.11.0 but the clone was never fast-forwarded, so `hermes update` on that path can silently roll the code back to 2.10.0. Re-clone or `git -C` pull before trusting it. |
+| optmem | full source | **no `.git`** | **0.3.0** | Repo released **v0.3.3** (PRs #1–#16 merged). The installed copy is three releases behind and unversioned, exactly the R0 failure mode. Catalog pin upstream is still 0.3.2. |
+| lifeos | full source | **no `.git`** | 1.0.0 repo / dirty checkout | Disabled in the active profiles; local worktree has uncommitted changes (`__init__.py`, deleted `dashboard/dist/index.js`). |
 
-Three problems, each a roadmap item:
+Three roadmap consequences:
 
-1. **lifeos and optmem are unversioned working copies, not clones.** The index
-   says `install.sh` clones them from their repos; in reality they are loose
-   directories with no git remote. Any local edit is unversioned and has
-   nowhere to be pushed. This silently breaks the standalone-repo guarantee the
-   whole hub is built on. → **R0**
-2. **optmem is `not enabled`** despite `enabled_by_default: true`. OptMem memory
-   *is* working, which means it runs through the core memory provider, not this
-   plugin — so the index's description of how it's wired is wrong. → **R0**
-3. **hermes-achievements is not a plugin.** It's three state files with no code
-   and no entry in `hermes plugins list` — leftover data, not something to
-   index. → **R3**
+1. **R0 is still open**, and worse than in August for optmem: the plugin ships
+   releases the machine does not run. Fix the clone, then make `plugins.json`
+   `local_installation` say the truth (it still records `0.3.0-unreleased`,
+   sha `1cae500`).
+2. **quota's version skew is a trap**: `plugin.yaml` claims 2.11.0 while the
+   git object is 2.10.0. Anything that refreshes that directory reverts the
+   release. The 2.11.0 catalog re-pin (issue #143080) should not be merged while
+   the installed copy is in this state.
+3. **Catalog**: quota's entry is pinned to `ce8593a` (2.10.0). The re-pin branch
+   `catalog/quota-2.11.0` (`bf927f82`, one file, validated) is pushed to the
+   fork, but `CreatePullRequest` is refused for this account on
+   `NousResearch/hermes-agent` — a maintainer has to open it from the issue, or
+   the restriction has to be lifted.
 
 ### optmem — permanent memory
 Append-only `LOG.txt` + decay-compressed `TREE/`, accent-normalized BM25 recall.
@@ -68,31 +70,46 @@ until it survives a `hermes update` cleanly per the promotion rule in
 [experiments.md](experiments.md).
 
 ### quota — per-provider quota footer
-`/quota` slash + CLI command and a footer block. **The only plugin gated on
-unmerged upstream work**: it needs `transform_footer` (#85060) and
-`transform_usage_extra` (#85061). Until those merge, the hooks must be
-re-applied locally after every `hermes update` — see
-[updating.md](updating.md) and the `reapply` field in `prs.json`.
+`/quota` slash + CLI command, a `/quota` dashboard, a Codex special-reset
+announcement and a TUI dock — **shipped as v2.11.0** (tag on `master`
+`f4444ee`). It runs without upstream help: the dashboard, the CLI and the TUI
+dock are plugin-side.
+
+Two optional integrations are the only part gated on unmerged upstream work:
+`transform_footer` (#85060) appends a quota block to gateway replies, and
+`transform_usage_extra` (#85061) appends a section to `/usage`. Both were
+rewritten against current main on 2026-10-22, are MERGEABLE and are out of
+draft; until they land, the equivalent blocks must be re-applied locally after
+every `hermes update` — see [updating.md](updating.md) and the `reapply` field
+in `prs.json`.
 
 ---
 
 ## 2. Upstream PRs — in flight
 
-| PR | What | State | Action needed |
-|----|------|-------|---------------|
-| [#85060](https://github.com/NousResearch/hermes-agent/pull/85060) | `transform_footer` hook | open, MERGEABLE, BLOCKED | Wait on review |
-| [#85061](https://github.com/NousResearch/hermes-agent/pull/85061) | `transform_usage_extra` hook | open, MERGEABLE, BLOCKED | Wait on review |
-| [#83318](https://github.com/NousResearch/hermes-agent/pull/83318) | Silence Windows git warning (desktop) | open, MERGEABLE, BLOCKED | Wait on review |
-| [#69441](https://github.com/NousResearch/hermes-agent/pull/69441) | Gateway `/profile` picker | open, **CONFLICTING** | **Rebase onto main** |
-| [claude-auth#28](https://github.com/kristianvast/hermes-claude-auth/pull/28) | Loader across profiles + Windows | open, CLEAN | Ping maintainer |
-| [expo#46449](https://github.com/expo/expo/pull/46449) | Android headless loader guard (AllDrivers) | open, **CONFLICTING** | Rebase or ping |
+| PR | What | State (2026-10-22) | Action needed |
+|----|------|---------------------|---------------|
+| [#85060](https://github.com/NousResearch/hermes-agent/pull/85060) | `transform_footer` hook | **open, ready for review, MERGEABLE, BLOCKED** | Wait on maintainer review (rewritten against current main) |
+| [#85061](https://github.com/NousResearch/hermes-agent/pull/85061) | `transform_usage_extra` hook | **open, ready for review, MERGEABLE, BLOCKED** | Wait on maintainer review (rewritten against current main) |
+| [#69441](https://github.com/NousResearch/hermes-agent/pull/69441) | Gateway `/profile` switching + picker | **open, draft, CONFLICTING** | **Rebuild**, not rebase (28 + 5 conflict hunks; `/profile` architecture changed) |
+| [#98141](https://github.com/NousResearch/hermes-agent/pull/98141) | MCP OAuth state-rotation fix | **open, CONFLICTING** (was CLEAN) | Rebase; runtime still covered by local cherry-pick `03ec6082e` |
+| [#83318](https://github.com/NousResearch/hermes-agent/pull/83318) | Windows git warning (desktop) | **closed unmerged 17/10** | None — dropped upstream, irrelevant on Linux |
+| [claude-auth#28](https://github.com/kristianvast/hermes-claude-auth/pull/28) | Loader across profiles + Windows | **merged 18/08** | None — stop tracking as open |
+| [expo#46449](https://github.com/expo/expo/pull/46449) | Android headless loader guard (AllDrivers) | **closed unmerged 10/10** | Keep the local `patch-package` carry in AllDrivers |
 
-Landed / closed-but-cherry-picked, kept for provenance: `OptMem#2` (merged),
-`#6844` and `#56966` (cherry-picked into core), `#79397` (superseded by the
-split above), `#83259` (superseded by #83318).
+Landed / closed-but-cherry-picked, kept for provenance: `OptMem#2` (merged
+2026-07-27), `#6844` and `#56966` (cherry-picked into core), `#79397`
+(superseded by the two split hooks), `#83259` (superseded by #83318, also closed).
 
-**Only two PRs actually need work: #69441 and expo#46449 — both need a rebase.**
-Everything else is waiting on someone other than us.
+**What actually needs work now: two rebases (`#98141`, `#69441`) and one rebuild
+(`#69441`).** The two render hooks are out of draft and mergeable — nothing left
+on our side.
+
+Catalog re-pins merged so far: quota added in `#112775`, re-pinned in `#118437`
+(2.4.1), `#127618` (2.8.1), `#132702` (2.10.0); optmem added in `#130200`
+(0.3.2). Pending: quota 2.11.0 (issue
+[#143080](https://github.com/NousResearch/hermes-agent/issues/143080), branch
+ready, PR creation refused for this account) and optmem 0.3.3 (not opened).
 
 ---
 
